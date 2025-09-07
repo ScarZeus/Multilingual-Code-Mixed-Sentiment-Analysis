@@ -1,1 +1,3 @@
 BiLSTM/GRU
+
+venv\Scripts\activate
