@@ -1,3 +1,7 @@
 BiLSTM/GRU
 
 venv\Scripts\activate
+
+✅ Logistic Regression
+✅ Random Forest
+✅ BiLSTM (deep learning)
