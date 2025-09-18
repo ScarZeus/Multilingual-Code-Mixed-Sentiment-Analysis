@@ -13,7 +13,7 @@ def compute_metrics(eval_pred):
     return {"accuracy": acc, "f1": f1}
 
 
-def train_model(model, train_dataset, val_dataset, model_name, output_dir="./results", epochs=3, batch_size=16):
+def train_model(model, train_dataset, val_dataset, model_name, output_dir="./outputs", epochs=3, batch_size=16):
     save_dir = f"{output_dir}/{model_name}"
     os.makedirs(save_dir, exist_ok=True)
 
