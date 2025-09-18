@@ -7,3 +7,5 @@ torch
 nltk
 gensim
 tqdm
+transformers>=4.40.0
+

@@ -4,12 +4,11 @@ from torch.utils.data import Dataset
 
 
 def load_data(train_path, val_path, test_path, sentiment_path):
-    # Train + Validation
     train_df = pd.read_csv(train_path, sep="\t", header=None, names=["uid", "text", "label"])
     val_df = pd.read_csv(val_path, sep="\t", header=None, names=["uid", "text", "label"])
     test_df = pd.read_csv(test_path, sep="\t", header=None, names=["uid", "text"])
 
-    # Test sentiment labels
+    # Merge test labels
     sentiment_df = pd.read_csv(sentiment_path)
     test_df = test_df.merge(sentiment_df, left_on="uid", right_on="Uid", how="left")
     test_df.drop("Uid", axis=1, inplace=True)
