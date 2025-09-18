@@ -1,22 +1,42 @@
 import pandas as pd
-
-def preprocess_data(location: str):
-    train_csv = pd.read_csv(f"{location}/raw_train.tsv", sep="\t")
-    test_csv = pd.read_csv(f"{location}/raw_test.tsv", sep="\t")
-    validation_csv = pd.read_csv(f"{location}/raw_validation.tsv", sep="\t")
-    sentiment_labels = pd.read_csv(f"{location}/sentiment_label.txt", sep="\t")
-
-    print("Train Data:")
-    print(train_csv.head(), "\n")
-    print("Test Data:")
-    print(test_csv.head(), "\n")
-    print("Validation Data:")
-    print(validation_csv.head(), "\n")
-    print("Sentiment Labels:")
-    print(sentiment_labels.head(), "\n")
-
-    return train_csv, test_csv, validation_csv, sentiment_labels
+import torch
+from torch.utils.data import Dataset
 
 
-# usage
-train, test, val, labels = preprocess_data("data/raw")
+def load_data(train_path, val_path, test_path, sentiment_path):
+    # Train + Validation
+    train_df = pd.read_csv(train_path, sep="\t", header=None, names=["uid", "text", "label"])
+    val_df = pd.read_csv(val_path, sep="\t", header=None, names=["uid", "text", "label"])
+    test_df = pd.read_csv(test_path, sep="\t", header=None, names=["uid", "text"])
+
+    # Test sentiment labels
+    sentiment_df = pd.read_csv(sentiment_path)
+    test_df = test_df.merge(sentiment_df, left_on="uid", right_on="Uid", how="left")
+    test_df.drop("Uid", axis=1, inplace=True)
+    test_df.rename(columns={"Sentiment": "label"}, inplace=True)
+
+    return train_df, val_df, test_df
+
+
+class EmotionDataset(Dataset):
+    def __init__(self, texts, labels, tokenizer, max_len=64):
+        self.texts = texts
+        self.labels = labels
+        self.tokenizer = tokenizer
+        self.max_len = max_len
+
+    def __len__(self):
+        return len(self.texts)
+
+    def __getitem__(self, idx):
+        encoding = self.tokenizer(
+            str(self.texts[idx]),
+            truncation=True,
+            padding="max_length",
+            max_length=self.max_len,
+            return_tensors="pt"
+        )
+        item = {key: val.squeeze(0) for key, val in encoding.items()}
+        if self.labels is not None:
+            item["labels"] = torch.tensor(int(self.labels[idx]))
+        return item
