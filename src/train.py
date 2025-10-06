@@ -7,11 +7,11 @@ def train_model(model, train_dataset, val_dataset, model_name, output_dir="./out
     save_dir = f"{output_dir}/{model_name}"
     os.makedirs(save_dir, exist_ok=True)
 
-    # check transformers version
-    if version.parse(transformers_version) >= version.parse("4.2.0"):
+    if version.parse(transformers_version) >= version.parse("3.0.0"):
+        # ✅ For newer versions (>=3.0.0)
         training_args = TrainingArguments(
             output_dir=save_dir,
-            evaluation_strategy="epoch",   # works in new versions
+            eval_strategy="epoch",
             save_strategy="epoch",
             learning_rate=2e-5,
             per_device_train_batch_size=batch_size,
@@ -21,13 +21,15 @@ def train_model(model, train_dataset, val_dataset, model_name, output_dir="./out
             logging_dir=f"{save_dir}/logs",
             logging_steps=50,
             load_best_model_at_end=True,
-            metric_for_best_model="f1",
-            report_to="none"  
+            report_to="none"
         )
     else:
+        # ⚠️ For older versions (<3.0.0)
         training_args = TrainingArguments(
             output_dir=save_dir,
-            evaluate_during_training=True,  # fallback for old versions
+            do_train=True,
+            do_eval=True,
+            eval_strategy="epoch",
             learning_rate=2e-5,
             per_device_train_batch_size=batch_size,
             per_device_eval_batch_size=batch_size,
@@ -45,7 +47,7 @@ def train_model(model, train_dataset, val_dataset, model_name, output_dir="./out
         compute_metrics=compute_metrics,
     )
 
-    train_output = trainer.train()
+    trainer.train()
     trainer.save_model(f"{save_dir}/best_model")
 
     history = trainer.state.log_history
